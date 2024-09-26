@@ -60,6 +60,8 @@
 #include <vector>
 #include <string>
 
+#define MESSAGE_FILTERS_SYNC_APPROXIMATE_TIME_HAS_NON_OPTIMAL_OPTION
+
 namespace message_filters
 {
 namespace sync_policies
@@ -280,6 +282,8 @@ struct ApproximateTime : public PolicyBase<M0, M1, M2, M3, M4, M5, M6, M7, M8>
       }
     }
   }
+
+  void setAllowNonOptimalCandidates(bool allowance) { allow_non_optimal_candidates = allowance; }
 
   void setAgePenalty(double age_penalty)
   {
@@ -869,6 +873,13 @@ private:
             // We cannot prove optimality
             // Indeed, we have a virtual (i.e. optimistic) candidate that is better than the current
             // candidate
+
+            if (allow_non_optimal_candidates) {
+                publishCandidate();
+                break;
+            }
+
+
             // Cleanup the virtual search:
             num_non_empty_deques_ = 0; // We will recompute it from scratch
 	    recover<0>(num_virtual_moves[0]);
@@ -915,6 +926,7 @@ private:
 
   ros::Duration max_interval_duration_; // TODO: initialize with a parameter
   double age_penalty_;
+  bool allow_non_optimal_candidates = false;
 
   std::vector<bool> has_dropped_messages_;
   std::vector<ros::Duration> inter_message_lower_bounds_;
